@@ -1,11 +1,10 @@
 # ---- Build stage ----
-FROM node:18-alpine AS builder
+# Pin to Alpine 3.17: its system OpenSSL is 1.1.x, so libssl.so.1.1 is present
+# natively. Prisma 5.x query engine links against libssl.so.1.1, so this avoids
+# the "openssl1.1-compat (no such package)" failure that occurs on Alpine 3.20+.
+FROM node:18-alpine3.17 AS builder
 
 WORKDIR /app
-
-# Prisma 5.x query engine needs libssl.so.1.1; Alpine's default OpenSSL is 3.x.
-# Install the 1.1 compat lib so prisma generate / build-time DB probes don't fail.
-RUN apk add --no-cache openssl1.1-compat
 
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
@@ -18,14 +17,11 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---- Run stage ----
-FROM node:18-alpine AS runner
+FROM node:18-alpine3.17 AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
-
-# Same OpenSSL 1.1 compat lib for the runtime Prisma engine.
-RUN apk add --no-cache openssl1.1-compat
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
