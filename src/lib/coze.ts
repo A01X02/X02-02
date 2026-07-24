@@ -51,7 +51,7 @@ export async function chatWithCoze(
   }
 
   // 扣子的回复可能拆成多条消息，筛选 assistant 的 answer 类型并拼接
-  const answer = res.messages
+  const answer = (res.messages ?? [])
     .filter((m: any) => m.role === RoleType.Assistant && m.type === 'answer')
     .map((m: any) => m.content)
     .join('')
