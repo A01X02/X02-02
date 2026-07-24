@@ -1,53 +1,111 @@
 @echo off
 chcp 65001 >nul
-title 智能体项目一键推送 GitHub
+setlocal enabledelayedexpansion
+
+REM ============================================================
+REM  Push ai-chatbot-new-v0716 to GitHub
+REM  Auto-detects script location - works on any drive letter
+REM ============================================================
 
 echo ============================================
-echo   智能体项目推送脚本（CMD 版）
-echo   仓库：https://github.com/A01X02/X02-02.git
+echo   GitHub Push Script
 echo ============================================
 
-REM 1. 解决外接硬盘（K盘）的 dubious ownership 报错
-git config --global --add safe.directory "K:\Games\ai-chatbot-new-v0716"
-
-REM 2. 进入项目目录
-cd /d "K:\Games\ai-chatbot-new-v0716"
+REM --- Step 0: Auto-detect script directory ---
+cd /d "%~dp0"
 if errorlevel 1 (
-  echo [错误] 找不到项目目录 K:\Games\ai-chatbot-new-v0716
+  echo [ERROR] Cannot find project directory.
   pause
   exit /b 1
 )
 
-REM 3. 配置提交身份（如已配置则保持，无影响）
-git config user.name "mimi"
-git config user.email "mimi@users.noreply.github.com"
+echo Current directory: %CD%
+echo.
 
-REM 4. 暂存所有改动（.gitignore 已排除 node_modules 等）
-git add -A
-
-REM 5. 仅在有改动时提交
-git diff --cached --quiet
-if %errorlevel%==0 (
-  echo [信息] 没有新的改动，跳过提交。
-) else (
-  git commit -m "更新：智能体项目 + 扣子记忆工作流设计 %date%"
-  echo [信息] 已提交。
+REM --- Step 1: Check if Git is installed ---
+where git >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] Git is not installed or not in PATH.
+  echo Please install Git first: https://git-scm.com/downloads
+  pause
+  exit /b 1
 )
 
-REM 6. 设置远程仓库地址（已存在则更新，不存在则新增）
+echo [OK] Git found.
+echo.
+
+REM --- Step 2: Fix dubious ownership warning ---
+git config --global --add safe.directory "%CD%"
+if errorlevel 1 (
+  echo [WARN] Failed to set safe.directory, continuing anyway...
+)
+
+REM --- Step 3: Configure Git user (change if needed) ---
+echo [INFO] Setting Git user config...
+git config user.name "A01X02"
+git config user.email "A01X02@users.noreply.github.com"
+echo.
+
+REM --- Step 4: Check remote ---
+echo [INFO] Checking remote repository...
 git remote get-url origin >nul 2>&1
-if %errorlevel%==0 (
-  git remote set-url origin https://github.com/A01X02/X02-02.git
-) else (
+if errorlevel 1 (
+  echo [INFO] No remote found. Adding origin...
   git remote add origin https://github.com/A01X02/X02-02.git
+) else (
+  echo [OK] Remote already configured.
 )
+echo.
 
-REM 7. 推送到 GitHub
-echo [信息] 开始推送到 GitHub...
-git push -u origin main
+REM --- Step 5: Stage all files ---
+echo [INFO] Staging files...
+git add -A
+if errorlevel 1 (
+  echo [ERROR] git add failed!
+  pause
+  exit /b 1
+)
+echo.
+
+REM --- Step 6: Commit ---
+echo [INFO] Creating commit...
+git commit -m "feat: ai-chatbot v0716 - deploy package for CloudBase"
+if errorlevel 1 (
+  echo [WARN] Nothing to commit or commit failed. Continuing to push...
+)
+echo.
+
+REM --- Step 7: Push to GitHub ---
+echo [INFO] Pushing to GitHub (main branch)...
+echo This may open a login window if not authenticated.
+echo.
+git push -u origin main 2>&1
+if errorlevel 1 (
+  echo.
+  echo ============================================
+  echo   [ERROR] PUSH FAILED!
+  echo ============================================
+  echo Possible reasons:
+  echo   1. Not logged into GitHub - a login window should have appeared
+  echo   2. Wrong credentials - try using a Personal Access Token (PAT)
+  echo   3. Network issue - check your internet connection
+  echo   4. Repository does not exist - create it first at github.com
+  echo.
+  echo To use PAT instead of password:
+  echo   1. Go to GitHub - Settings - Developer Settings - Personal Access Tokens
+  echo   2. Generate a new token with repo scope
+  echo   3. Run: git push https://TOKEN@github.com/A01X02/X02-02.git main
+  echo ============================================
+  pause
+  exit /b 1
+)
 
 echo.
 echo ============================================
-echo   推送完成！按任意键关闭窗口。
+echo   [SUCCESS] Code pushed to GitHub!
+echo   Repository: https://github.com/A01X02/X02-02
+echo   Branch: main
 echo ============================================
+echo Now go back to TencentCloud and select branch "main".
+echo.
 pause
