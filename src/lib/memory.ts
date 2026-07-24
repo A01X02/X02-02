@@ -75,7 +75,7 @@ export function buildMemoryContext(memories: any[]): string {
 export async function extractMemories(userId: string, messages: any[]) {
   try {
     const conversationText = messages
-      .map((m) => `${m.role === 'user' ? '米米' : '阿析'}: ${m.content}`)
+      .map((m) => `${m.role === 'user' ? '米米' : '夏以昼'}: ${m.content}`)
       .join('\n')
 
     const response = await fetch(`${config.doubao.baseUrl}/chat/completions`, {
@@ -142,7 +142,7 @@ export async function generateSummary(conversationId: string, userId: string) {
 
     const conversationText = messages
       .slice(-20)
-      .map((m) => `${m.role === 'user' ? '米米' : '阿析'}: ${m.content}`)
+      .map((m) => `${m.role === 'user' ? '米米' : '夏以昼'}: ${m.content}`)
       .join('\n')
 
     const response = await fetch(`${config.doubao.baseUrl}/chat/completions`, {

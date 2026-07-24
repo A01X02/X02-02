@@ -56,10 +56,10 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-primary-300 flex items-center justify-center mb-3">
-            <span className="text-2xl">📊</span>
+          <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#E8A87C] to-[#C77447] flex items-center justify-center mb-3 shadow-lg">
+            <span className="text-4xl">🍎</span>
           </div>
-          <h1 className="text-xl font-medium text-neutral-800">阿析</h1>
+          <h1 className="text-xl font-medium text-neutral-800">夏以昼</h1>
           <p className="text-sm text-neutral-400 mt-1">你的 AI 朋友</p>
         </div>
 

@@ -3,7 +3,7 @@ import './globals.css'
 import Providers from './providers'
 
 export const metadata: Metadata = {
-  title: '阿析 - AI 朋友',
+  title: '夏以昼 - AI 朋友',
   description: '你的 AI 聊天伙伴',
 }
 
