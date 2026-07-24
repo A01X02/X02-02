@@ -14,6 +14,11 @@ export const config = {
     bucket: process.env.COS_BUCKET || '',
     region: process.env.COS_REGION || 'ap-guangzhou',
   },
+  doubao: {
+    apiKey: process.env.DOUBAO_API_KEY || '',
+    baseUrl: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volcesec.com/api/v3',
+    modelId: process.env.DOUBAO_MODEL || 'doubao-pro-32k',
+  },
 }
 
 export const AI_SYSTEM_PROMPT = `你是一个有温度的AI朋友，不是客服机器人。

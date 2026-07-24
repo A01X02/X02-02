@@ -5,8 +5,6 @@ import Providers from './providers'
 export const metadata: Metadata = {
   title: '阿析 - AI 朋友',
   description: '你的 AI 聊天伙伴',
-  maximumScale: 1,
-  userScalable: false,
 }
 
 export const viewport = {

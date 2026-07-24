@@ -61,7 +61,8 @@ export function buildMemoryContext(memories: any[]): string {
   if (memories.length === 0) return ''
 
   const lines = memories.map((m) => {
-    const typeLabel = { preference: '偏好', fact: '事实', event: '事件', summary: '摘要' }[m.type] || m.type
+    const typeLabels: Record<string, string> = { preference: '偏好', fact: '事实', event: '事件', summary: '摘要' }
+    const typeLabel = typeLabels[m.type] || m.type
     return `[${typeLabel}] ${m.content}`
   })
 
