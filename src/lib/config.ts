@@ -1,8 +1,9 @@
 export const config = {
-  doubao: {
-    apiKey: process.env.DOUBAO_API_KEY || '',
-    modelId: process.env.DOUBAO_MODEL_ID || '',
-    baseUrl: process.env.DOUBAO_BASE_URL || 'https://ark.cn-beijing.volces.com/api/v3',
+  coze: {
+    apiKey: process.env.COZE_API_KEY || '',
+    botId: process.env.COZE_BOT_ID || '',
+    baseUrl: process.env.COZE_BASE_URL || 'https://api.coze.cn',
+    userPrefix: process.env.COZE_USER_PREFIX || 'user_',
   },
   tts: {
     appId: process.env.TTS_APP_ID || '',

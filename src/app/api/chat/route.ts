@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/db'
-import { config, AI_SYSTEM_PROMPT } from '@/lib/config'
 import { retrieveRelevantMemories, buildMemoryContext, extractMemories, generateSummary } from '@/lib/memory'
+import { chatWithCoze } from '@/lib/coze'
 
 export async function POST(req: Request) {
   try {
@@ -19,6 +19,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '消息不能为空' }, { status: 400 })
     }
 
+    if (!conversationId) {
+      return NextResponse.json({ error: '缺少 conversationId' }, { status: 400 })
+    }
+
     // 1. 保存用户消息
     const userMsg = await prisma.message.create({
       data: {
@@ -29,7 +33,7 @@ export async function POST(req: Request) {
       },
     })
 
-    // 2. 获取历史消息（最近20条）
+    // 2. 获取历史消息（用于记忆提取、摘要和上下文增强）
     const history = await prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' },
@@ -48,41 +52,18 @@ export async function POST(req: Request) {
     })
 
     const summaryContext = summaries.length > 0
-      ? `\n\n=== 之前的对话摘要 ===\n${summaries[0].content}\n`
+      ? `=== 之前的对话摘要 ===\n${summaries[0].content}`
       : ''
 
-    // 5. 构建消息列表
-    const messages = [
-      { role: 'system', content: AI_SYSTEM_PROMPT + memoryContext + summaryContext },
-      ...history.map((m) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
-    ]
+    // 5. 把记忆和摘要拼到当前用户消息里（扣子后台已有人设，这里只补充外部记忆）
+    const enhancedMessage = [memoryContext, summaryContext, message]
+      .filter((part) => part.trim().length > 0)
+      .join('\n\n')
 
-    // 6. 调用豆包 API
-    const response = await fetch(`${config.doubao.baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${config.doubao.apiKey}`,
-      },
-      body: JSON.stringify({
-        model: config.doubao.modelId,
-        messages,
-        temperature: 0.8,
-        max_tokens: 1000,
-      }),
-    })
-
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('Doubao API error:', errText)
-      return NextResponse.json({ error: 'AI回复失败，请稍后重试' }, { status: 502 })
-    }
-
-    const data = await response.json()
-    const aiContent = data.choices?.[0]?.message?.content || '...'
+    // 6. 调用扣子智能体
+    const aiContent = await chatWithCoze(userId, conversationId, [
+      { role: 'user', content: enhancedMessage },
+    ])
 
     // 7. 保存AI回复
     const aiMsg = await prisma.message.create({
@@ -99,7 +80,7 @@ export async function POST(req: Request) {
       data: { lastMsgAt: new Date() },
     })
 
-    // 9. 每6轮对话自动提取记忆
+    // 9. 每6轮对话自动提取记忆（基于当前历史）
     const msgCount = history.length
     if (msgCount > 0 && msgCount % 6 === 0) {
       extractMemories(userId, history.slice(-6)).catch(() => {})
@@ -116,6 +97,7 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json({ error: '服务器错误' }, { status: 500 })
+    const errMsg = error instanceof Error ? error.message : '服务器错误'
+    return NextResponse.json({ error: errMsg }, { status: 500 })
   }
 }
