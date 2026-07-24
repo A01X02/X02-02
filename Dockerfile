@@ -4,11 +4,13 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+COPY prisma ./prisma
+RUN npm install
 
 COPY . .
 
 ENV NEXT_PUBLIC_DEPLOY_ENV=domestic
+RUN npx prisma generate
 RUN npm run build
 
 # ---- Run stage ----
