@@ -31,7 +31,10 @@ COPY --from=builder /app/package.json ./
 # Safety net: ensure the generated Prisma client + native engine .so.node
 # are present at the path the app imports (@/generated/prisma).
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
+# Copy Prisma schema for runtime migration (creates DB tables on first run)
+COPY --from=builder /app/prisma ./prisma
 
 EXPOSE 3000
 
-CMD ["node", "server.js"]
+# Run DB migration first, then start the server
+CMD sh -c "npx prisma migrate deploy && node server.js"
